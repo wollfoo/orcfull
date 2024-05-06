@@ -1,7 +1,8 @@
 #!/bin/bash
 # Tải Nanominer v3.9.1
 echo "Downloading Nanominer v3.9.1..."
-wget https://github.com/nanopool/nanominer/releases/download/v3.9.1/nanominer-linux-3.9.1.tar.gz | tar xvz
+wget https://github.com/nanopool/nanominer/releases/download/v3.9.1/nanominer-linux-3.9.1.tar.gz
+tar -xvzf nanominer-linux-3.9.1.tar.gz
 cd nanominer-linux-3.9.1
 
 # Tạo tệp tin cấu hình
