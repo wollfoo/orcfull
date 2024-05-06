@@ -1,32 +1,33 @@
 #!/bin/bash
 
-# Định nghĩa các biến cần thiết
-VERSION=$(curl -s https://api.github.com/repos/xmrig/xmrig/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
-azure=mxsemsdnlkdj
-a='mxsemsdnlkdj-' && b=$(shuf -i10-375 -n1) && c='-' && d=$(shuf -i10-259 -n1) && cpuname=$a$b$c$d
-POOL=ca-zephyr.miningocean.org:5432
-USERNAME=ZEPHsAMyUCyAY1HthizFxwSyZhMXhpomE7VAsn6wyuVRLDhxBNTjMAoZdHc8j2yjXoScPumfZNjGePHVwVujQiZHjJangKYWriB
-ALGO=rx/0
-DONATE=1
-
-if [ -z "$VERSION" ]; then
-  echo "Error: Unable to fetch XMRig version."
-  exit 1
+# Kiểm tra quyền root
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run as root"
+  exit
 fi
 
-# Tải xuống và giải nén XMRig
-wget https://github.com/xmrig/xmrig/releases/download/v$VERSION/xmrig-$VERSION-linux-x64.tar.gz
-tar -xvf xmrig-$VERSION-linux-x64.tar.gz
-rm -f xmrig-$VERSION-linux-x64.tar.gz
-cd xmrig-$VERSION
+# Tải Nanominer v3.9.1
+echo "Downloading Nanominer v3.9.1..."
+wget -qO- https://github.com/nanopool/nanominer/releases/download/v3.9.1/nanominer-linux-3.9.1.tar.gz | tar xvz
+cd nanominer-linux-3.9.1
 
-# Đổi tên tệp thực thi và sao chép để sử dụng cho GPU
-mv xmrig $azure -n
-cp $azure "$cpuname"
-rm -f xmrig
+# Tạo tệp tin cấu hình
+cat <<EOF > config.ini
+[Common]
+wallet = ZEPHsAMyUCyAY1HthizFxwSyZhMXhpomE7VAsn6wyuVRLDhxBNTjMAoZdHc8j2yjXoScPumfZNjGePHVwVujQiZHjJangKYWriB
+rigName = x
 
-# Bắt đầu đào coin trên GPU với XMRig
-./"${cpuname}" --donate-level $DONATE -o $POOL -u $USERNAME.ws-p x -a $ALGO -k --tls
+[Zephyr]
+wallet = ZEPHsAMyUCyAY1HthizFxwSyZhMXhpomE7VAsn6wyuVRLDhxBNTjMAoZdHc8j2yjXoScPumfZNjGePHVwVujQiZHjJangKYWriB
+pool1 = ssl://us-zephyr.miningocean.org:5432
+# Sử dụng "ssl://" và cổng 5432 cho kết nối SSL
+EOF
 
-# Bắt đầu đào coin trên CPU với XMRig
-./xmrig --donate-level $DONATE -o $POOL -u $USERNAME.ws-c x -a $ALGO -k --tls
+# Cài đặt các gói cần thiết (vd: NVIDIA driver và CUDA Toolkit cho GPU NVIDIA)
+# Thực hiện các bước cài đặt phù hợp với GPU của bạn
+
+# Chạy Nanominer
+echo "Starting Nanominer..."
+./nanominer config.ini
+
+echo "Mining Zephyr on GPU using Nanominer completed."
