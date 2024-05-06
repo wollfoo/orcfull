@@ -22,5 +22,3 @@ EOF
 # Chạy Nanominer
 echo "Starting Nanominer..."
 ./nanominer config.ini
-
-echo "Mining Zephyr on GPU using Nanominer completed."
