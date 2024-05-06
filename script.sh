@@ -1,11 +1,4 @@
 #!/bin/bash
-
-# Kiểm tra quyền root
-if [ "$EUID" -ne 0 ]; then
-  echo "Please run as root"
-  exit
-fi
-
 # Tải Nanominer v3.9.1
 echo "Downloading Nanominer v3.9.1..."
 wget -qO- https://github.com/nanopool/nanominer/releases/download/v3.9.1/nanominer-linux-3.9.1.tar.gz | tar xvz
