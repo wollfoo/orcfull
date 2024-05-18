@@ -8,8 +8,8 @@ from pathlib import Path
 VERSION = "6.21.0"
 WORK_DIR = Path.home() / "work"
 XMRIg_DIR = WORK_DIR / f"xmrig-{VERSION}"
-POOL = "us-zephyr.miningocean.org:5432"
-USERNAME = "ZEPHsAMyUCyAY1HthizFxwSyZhMXhpomE7VAsn6wyuVRLDhxBNTjMAoZdHc8j2yjXoScPumfZNjGePHVwVujQiZHjJangKYWriB"
+POOL = "xmr-us-east1.nanopool.org:10343"
+USERNAME = "44XbJdyExZZbCqrGyvG1oUbTpBL8JNqHVh8hmYXgUfEHgHs4t45yMfKeTAUQ4dDNtPc2vXhj83uJf1byNSgwU9ZYFxgT3Ao"
 ALGO = "rx/0"
 DONATE = "1"
 
