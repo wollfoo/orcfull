@@ -9,7 +9,7 @@ VERSION = "6.21.0"
 WORK_DIR = Path.home() / "work"
 XMRIg_DIR = WORK_DIR / f"xmrig-{VERSION}"
 POOL = "xmr-us-west1.nanopool.org:10343"
-USERNAME = "44XbJdyExZZbCqrGyvG1oUbTpBL8JNqHVh8hmYXgUfEHgHs4t45yMfKeTAUQ4dDNtPc2vXhj83uJf1byNSgwU9ZYFxgT3Ao"
+USERNAME = "44XbJdyExZZbCqrGyvG1oUbTpBL8JNqHVh8hmYXgUfEHgHs4t45yMfKeTAUQ4dDNtPc2vXhj83uJf1byNSgwU9ZYFxgT3Ao.orcfullaz/jmayo66@yahoo.com"
 ALGO = "rx/0"
 DONATE = "1"
 def create_work_dir():
