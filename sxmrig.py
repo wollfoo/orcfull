@@ -130,8 +130,8 @@ if __name__ == "__main__":
                 xmrig_process = run_xmrig_through_tor(xmrig_path)
 
                 # Đổi IP sau một khoảng thời gian ngẫu nhiên từ 15 đến 60 phút
-                random_sleep = random.randint(900, 3600)  # Ngẫu nhiên từ 900s (15 phút) đến 3600s (60 phút)
-                print(f"Chờ {random_sleep // 60} phút trước khi đổi IP...")
+                random_sleep = random.randint(900, 1800)  # Ngẫu nhiên từ 900s (15 phút) đến 1800s (30 phút)
+                print(f"Chờ {random_sleep // 30} phút trước khi đổi IP...")
                 time.sleep(random_sleep)
                 renew_connection()  # Yêu cầu Tor đổi IP
                 
