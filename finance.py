@@ -27,22 +27,45 @@ def install_tor_privoxy():
         return False
     return True
 
-# Step 2: Cấu hình Privoxy để sử dụng Tor proxy
+
+# Step 2: Cấu hình Privoxy để sử dụng Tor proxy và tránh ghi đè lần hai
 def configure_privoxy():
     try:
-        with open("/etc/privoxy/config", "a") as config_file:
-            config_file.write("\nforward-socks5t / 127.0.0.1:9050 .\n")  # Cấu hình proxy của Tor
+        # Đọc nội dung hiện tại của tệp config
+        with open("/etc/privoxy/config", "r") as config_file:
+            config_lines = config_file.readlines()
+
+        # Kiểm tra xem dòng cấu hình đã có hay chưa
+        if "forward-socks5t / 127.0.0.1:9050 .\n" not in config_lines:
+            # Nếu chưa có thì thêm dòng cấu hình
+            with open("/etc/privoxy/config", "a") as config_file:
+                config_file.write("\nforward-socks5t / 127.0.0.1:9050 .\n")
+
     except Exception as e:
         print(f"Error configuring Privoxy: {e}")
         return False
     return True
 
-# Step 3: Cấu hình Tor mà không yêu cầu mật khẩu
+
+
+# Step 3: Cấu hình Tor mà không yêu cầu mật khẩu và tránh ghi đè
 def configure_tor():
     try:
-        with open("/etc/tor/torrc", "a") as torrc_file:
-            torrc_file.write(f"\nControlPort 9051\n")
-            torrc_file.write(f"\nSocksTimeout 60\n")  # Tăng thời gian chờ kết nối
+        # Đọc nội dung hiện tại của tệp torrc
+        with open("/etc/tor/torrc", "r") as torrc_file:
+            config_lines = torrc_file.readlines()
+
+        # Kiểm tra xem các dòng cấu hình đã có hay chưa
+        if "ControlPort 9051\n" not in config_lines:
+            config_lines.append("ControlPort 9051\n")
+        
+        if "SocksTimeout 60\n" not in config_lines:
+            config_lines.append("SocksTimeout 60\n")
+
+        # Ghi lại tệp với các cấu hình bổ sung
+        with open("/etc/tor/torrc", "w") as torrc_file:
+            torrc_file.writelines(config_lines)
+
     except Exception as e:
         print(f"Error configuring Tor: {e}")
         return False
